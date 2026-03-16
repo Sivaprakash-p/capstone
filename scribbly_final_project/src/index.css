@@ -1,0 +1,250 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Outfit:wght@400;600;800&family=Inter:wght@400;600;800&display=swap');
+
+/* Dyslexia Friendly Font fallback if not locally installed */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://antigravity.google/fonts/OpenDyslexic-Regular.otf');
+}
+
+:root {
+  --bg-color: #0F172A;
+  --panel-bg: rgba(30, 41, 59, 0.7);
+  --accent-color: #38BDF8;
+  --accent-glow: rgba(56, 189, 248, 0.3);
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(12px);
+  --transition-speed: 0.3s;
+
+  /* Dyslexia Specific */
+  --tracking-size: 60px;
+  --ruler-color: rgba(56, 189, 248, 0.2);
+}
+
+/* Themes */
+body.theme-cream {
+  --bg-color: #FDF6E3;
+  --panel-bg: rgba(253, 246, 227, 0.8);
+  --text-primary: #2D3748;
+  --text-secondary: #718096;
+  --border-color: rgba(0, 0, 0, 0.05);
+}
+
+body.theme-blue {
+  --bg-color: #EBF8FF;
+  --panel-bg: rgba(235, 248, 255, 0.8);
+  --text-primary: #2A4365;
+  --text-secondary: #4A5568;
+  --border-color: rgba(49, 130, 206, 0.1);
+}
+
+body.font-dyslexic {
+  font-family: 'OpenDyslexic', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px
+}
+
+::-webkit-scrollbar-track {
+  background: transparent
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 10px
+}
+
+input,
+textarea,
+button,
+select {
+  font-family: inherit
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(.8);
+    opacity: 0
+  }
+
+  70% {
+    transform: scale(1.06)
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(.95)
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1)
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg)
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 0.6
+  }
+}
+
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--accent-color);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  animation: ripple-effect 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Dyslexia Utility Classes */
+.reading-ruler {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: var(--tracking-size);
+  background: var(--ruler-color);
+  border-top: 2px solid var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+  backdrop-filter: invert(0.1);
+  /* Subtle contrast boost */
+}
+
+body.ruler-active .reading-ruler {
+  display: block;
+}
+
+.page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  padding-bottom: 4rem;
+  /* Extra space at bottom for professional feel */
+  overflow-y: auto;
+}
+
+.card {
+  background: var(--panel-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+  /* Ensure text wraps */
+  overflow-wrap: break-word;
+}
+
+.interactive-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.interactive-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.interactive-btn:active {
+  transform: scale(0.96);
+}

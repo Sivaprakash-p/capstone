@@ -1,0 +1,47 @@
+{
+  "name": "scribbly",
+  "version": "4.0.0",
+  "description": "Scribbly — TrOCR powered, fully offline handwriting companion for dyslexic learners",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev":              "vite",
+    "build":            "vite build",
+    "electron:dev":     "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dist:win":         "vite build && electron-builder --win portable",
+    "dist:win-install": "vite build && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "react":     "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite":                 "^5.1.0",
+    "electron":             "^31.0.0",
+    "electron-builder":     "^24.13.3",
+    "concurrently":         "^8.2.2",
+    "wait-on":              "^7.2.0"
+  },
+  "build": {
+    "appId":       "com.scribbly.app",
+    "productName": "Scribbly",
+    "directories": { "buildResources":"assets", "output":"dist-electron" },
+    "files": ["dist/**/*", "electron/**/*"],
+    "extraFiles": [],
+    "win": {
+      "target": [
+        { "target":"portable", "arch":["x64"] },
+        { "target":"nsis",     "arch":["x64"] }
+      ],
+      "artifactName": "${productName}-v${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick":               false,
+      "allowDirChange":         true,
+      "createDesktopShortcut":  true,
+      "createStartMenuShortcut":true,
+      "shortcutName":           "Scribbly"
+    }
+  }
+}
