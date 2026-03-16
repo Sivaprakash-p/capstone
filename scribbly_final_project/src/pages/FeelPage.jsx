@@ -16,7 +16,6 @@ export default function FeelPage({ addAction }) {
   const canvasRef = useRef(null);
   const isDrawing = useRef(false);
 
-  // Mini drawing logic for "Draw your feeling"
   useEffect(() => {
     if (selectedMood && canvasRef.current) {
       const canvas = canvasRef.current;
