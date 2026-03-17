@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import WritingPage from './pages/WritingPage';
 import ReadingPage from './pages/ReadingPage';
 import MemoryPage from './pages/MemoryPage';
@@ -6,6 +7,7 @@ import FeelPage from './pages/FeelPage';
 import AdultsPage from './pages/AdultsPage';
 import TrainingPage from './pages/TrainingPage';
 import AboutPage from './pages/SettingsPage';
+import AuthPage from './pages/AuthPage';
 
 const TABS = [
   { id: 'write', icon: '✏️', label: 'Write' },
@@ -18,6 +20,8 @@ const TABS = [
 ];
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [tab, setTab] = useState('write');
   const [theme, setTheme] = useState('dark'); // dark, cream, blue
   const [dyslexicFont, setDyslexicFont] = useState(false);
@@ -42,6 +46,21 @@ export default function App() {
       recentActions: [{ t: Date.now(), d: desc }, ...prev.recentActions].slice(0, 10)
     }));
   };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     document.body.className = '';
@@ -71,6 +90,14 @@ export default function App() {
       default: return <WritingPage {...commonProps} />;
     }
   };
+
+  if (isAuthLoading) {
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A1A3A', color: '#38BDF8', fontSize: '24px', fontWeight: 'bold' }}>Loading Scribbly...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage onAuthSuccess={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative' }}>
@@ -106,6 +133,8 @@ export default function App() {
         ))}
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => supabase.auth.signOut()} style={{ padding: '8px 16px', background: 'rgba(239, 68, 68, 0.2)', color: '#FCA5A5', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>Log Out</button>
+
           {/* Accessibility Controls */}
           <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: 4, borderRadius: 10, gap: 4 }}>
             <button title="Contrast Theme" onClick={() => setTheme(p => p === 'cream' ? 'dark' : 'cream')}
