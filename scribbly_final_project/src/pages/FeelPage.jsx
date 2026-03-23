@@ -29,17 +29,25 @@ export default function FeelPage({ addAction }) {
 
   const handleDrawStart = (e) => {
     isDrawing.current = true;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const ctx = canvasRef.current.getContext('2d');
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
     ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
   };
 
   const handleDrawMove = (e) => {
     if (!isDrawing.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
     ctx.stroke();
   };
 
@@ -62,82 +70,78 @@ export default function FeelPage({ addAction }) {
   };
 
   return (
-    <div className="page-container">
-      <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+    <div className="page-container" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
-          <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <header>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>How are you feeling right now?</h2>
-              <p style={{ color: 'var(--text-secondary)' }}>Choose a mood that matches your energy today.</p>
-            </header>
+      <aside className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: 'fit-content' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Emotion Hub 💚</h3>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Check in with yourself and find your center.</p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-              {MOODS.map(m => (
-                <button key={m.l}
-                  onClick={() => selectMood(m)}
-                  className="interactive-btn"
-                  style={{
-                    height: '120px',
-                    flexDirection: 'column',
-                    background: selectedMood?.l === m.l ? m.c : 'rgba(255,255,255,0.05)',
-                    color: selectedMood?.l === m.l ? '#fff' : 'var(--text-primary)',
-                    border: `2px solid ${selectedMood?.l === m.l ? m.b : 'transparent'}`
-                  }}>
-                  <span style={{ fontSize: '2.5rem' }}>{m.e}</span>
-                  <span style={{ fontSize: '1rem' }}>{m.l}</span>
-                </button>
-              ))}
-            </div>
-
-            {selectedMood && (
-              <div className="fade-up" style={{ marginTop: '1rem', padding: '1.5rem', borderRadius: '1rem', background: 'rgba(255,255,255,0.05)', border: `1px dashed ${selectedMood.c}` }}>
-                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Draw or scribble how {selectedMood.l} feels:</h3>
-                <canvas
-                  ref={canvasRef}
-                  width={600}
-                  height={200}
-                  onMouseDown={handleDrawStart}
-                  onMouseMove={handleDrawMove}
-                  onMouseUp={() => isDrawing.current = false}
-                  style={{ background: '#fff', borderRadius: '0.5rem', width: '100%', cursor: 'crosshair', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }}
-                />
-              </div>
-            )}
-          </section>
-
-          <aside style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div className="card" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>🫁 Calm Zone</h3>
-              <div style={{
-                width: '160px', height: '160px', borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--accent-color), #4F46E5)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 30px var(--accent-glow)',
-                animation: breathing ? 'pulse 3s infinite ease-in-out' : 'none'
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {MOODS.map(m => (
+            <button key={m.l}
+              onClick={() => selectMood(m)}
+              className="interactive-btn"
+              style={{
+                background: selectedMood?.l === m.l ? m.c : 'rgba(255,255,255,0.05)',
+                color: selectedMood?.l === m.l ? '#fff' : '#fff',
+                border: `2px solid ${selectedMood?.l === m.l ? m.b : 'transparent'}`,
+                justifyContent: 'flex-start',
+                padding: '0.75rem 1rem'
               }}>
-                <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.1rem' }}>{breathing ? breathText : 'Start'}</span>
-              </div>
-              {!breathing ? (
-                <button className="interactive-btn" onClick={startBreathing} style={{ background: 'var(--accent-color)', color: '#0F172A' }}>
-                  Begin 4-4-4 Breathing
-                </button>
-              ) : (
-                <button className="interactive-btn" onClick={() => { setBreathing(false); setBreathText('Relaxed'); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>
-                  Finish
-                </button>
-              )}
-            </div>
-
-            <div className="card" style={{ background: 'linear-gradient(135deg, #4F46E5, #06B6D4)', color: '#fff' }}>
-              <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', opacity: 0.8, letterSpacing: '0.05em' }}>Daily Reminder</h3>
-              <p style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1rem', lineHeight: 1.5 }}>
-                "Your unique brain is a gift, not a burden. You see the world in colors others haven't discovered yet."
-              </p>
-            </div>
-          </aside>
+              <span style={{ fontSize: '1.5rem', marginRight: '0.75rem' }}>{m.e}</span>
+              <span style={{ fontWeight: selectedMood?.l === m.l ? 700 : 500 }}>{m.l}</span>
+            </button>
+          ))}
         </div>
-      </div>
+
+        <div className="card" style={{ background: 'linear-gradient(135deg, #4F46E5, #06B6D4)', color: '#fff', marginTop: '1rem', padding: '1.25rem' }}>
+          <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', opacity: 0.8, letterSpacing: '0.05em' }}>Daily Reminder</h3>
+          <p style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '0.75rem', lineHeight: 1.4 }}>
+            "Your unique brain is a gift, not a burden. You see the world in colors others haven't discovered yet."
+          </p>
+        </div>
+      </aside>
+
+      <main className="card" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '500px', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>🫁 Calm Zone</h3>
+          <div style={{
+            width: '180px', height: '180px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, var(--accent-color), #4F46E5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 30px var(--accent-glow)',
+            animation: breathing ? 'pulse 3s infinite ease-in-out' : 'none'
+          }}>
+            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.25rem' }}>{breathing ? breathText : 'Start'}</span>
+          </div>
+          {!breathing ? (
+            <button className="interactive-btn" onClick={startBreathing} style={{ background: 'var(--accent-color)', color: '#0F172A', padding: '0.75rem 2rem' }}>
+              Begin 4-4-4 Breathing
+            </button>
+          ) : (
+            <button className="interactive-btn" onClick={() => { setBreathing(false); setBreathText('Relaxed'); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>
+              Finish
+            </button>
+          )}
+        </div>
+
+        {selectedMood && (
+          <div className="fade-up" style={{ width: '100%', marginTop: '1rem', padding: '1.5rem', borderRadius: '1rem', background: 'rgba(255,255,255,0.05)', border: `1px dashed ${selectedMood.c}` }}>
+            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Draw or scribble how {selectedMood.l} feels:</h3>
+            <canvas
+              ref={canvasRef}
+              width={600}
+              height={200}
+              onMouseDown={handleDrawStart}
+              onMouseMove={handleDrawMove}
+              onMouseUp={() => isDrawing.current = false}
+              onMouseLeave={() => isDrawing.current = false}
+              style={{ background: '#fff', borderRadius: '0.5rem', width: '100%', cursor: 'crosshair', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }}
+            />
+          </div>
+        )}
+      </main>
+
       <style>{`
         @keyframes pulse {
           0%, 100% { transform: scale(0.9); }
