@@ -10,8 +10,26 @@ const CONFUSED_LETTERS = [
 export default function TrainingPage({ addAction }) {
   const [selectedPair, setSelectedPair] = useState(CONFUSED_LETTERS[0]);
   const [activeLetter, setActiveLetter] = useState(selectedPair.pair[0]);
+  const [voice, setVoice] = useState(null);
   const canvasRef = useRef(null);
   const isDrawing = useRef(false);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      const friendly = availableVoices.find(v => 
+        v.name.includes('Google') || 
+        v.name.includes('Natural') || 
+        (v.lang.startsWith('en') && v.name.includes('Female'))
+      ) || availableVoices[0];
+      setVoice(friendly);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -33,7 +51,9 @@ export default function TrainingPage({ addAction }) {
   const speak = (txt) => {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(txt);
-    u.rate = 0.8;
+    if (voice) u.voice = voice;
+    u.rate = 0.85;
+    u.pitch = 1.1; 
     speechSynthesis.speak(u);
   };
 

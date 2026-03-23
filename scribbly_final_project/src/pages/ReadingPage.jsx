@@ -13,21 +13,47 @@ export default function ReadingPage({ addAction }) {
   const [speed, setSpeed] = useState(1.0);
   const [useCustom, setUseCustom] = useState(false);
   const [customText, setCustomText] = useState('');
+  const [voices, setVoices] = useState([]);
+  const [selectedVoiceName, setSelectedVoiceName] = useState('');
+  const [readMode, setReadMode] = useState('word'); // 'word' or 'continuous'
+ 
+  const isPlayingRef = useRef(false);
+  const speedRef = useRef(speed);
+  const voicesRef = useRef([]);
+  const selectedVoiceNameRef = useRef('');
+  const readModeRef = useRef(readMode);
+
+  // Sync refs with state
+  speedRef.current = speed;
+  selectedVoiceNameRef.current = selectedVoiceName;
+  readModeRef.current = readMode;
+
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      setVoices(availableVoices);
+      voicesRef.current = availableVoices;
+      
+      if (!selectedVoiceNameRef.current && availableVoices.length > 0) {
+        const friendly = availableVoices.find(v => 
+          v.name.includes('Google') || 
+          v.lang.startsWith('en') && v.name.includes('Female')
+        ) || availableVoices[0];
+        setSelectedVoiceName(friendly.name);
+      }
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      speechSynthesis.cancel();
+    };
+  }, []);
 
   const story = STORIES.find(s => s.id === storyId);
   const text = useCustom ? customText : (story?.text || '');
   const words = text.trim().split(/\s+/).filter(Boolean);
-
-  const isPlayingRef = useRef(false);
-  const speedRef = useRef(speed);
-
-  // Sync refs with state
-  speedRef.current = speed;
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => speechSynthesis.cancel();
-  }, []);
 
   const stop = useCallback(() => {
     speechSynthesis.cancel();
@@ -36,6 +62,7 @@ export default function ReadingPage({ addAction }) {
     setWordIdx(-1);
   }, []);
 
+  // Mode 1: Single Word Narration (High Focus)
   const speakWord = useCallback((i) => {
     if (i >= words.length || !isPlayingRef.current) {
       if (i >= words.length) stop();
@@ -43,23 +70,49 @@ export default function ReadingPage({ addAction }) {
     }
 
     speechSynthesis.cancel();
-
     const u = new SpeechSynthesisUtterance(words[i]);
     u.rate = speedRef.current;
     
-    // Explicitly handle end to move to next word
+    const voice = voicesRef.current.find(v => v.name === selectedVoiceNameRef.current);
+    if (voice) u.voice = voice;
+    u.pitch = 1.05; 
+    
     u.onend = () => {
-      if (isPlayingRef.current) {
-        // Use a small delay to ensure previous utterance is fully cleared
-        setTimeout(() => speakWord(i + 1), 10);
+      if (isPlayingRef.current) setTimeout(() => speakWord(i + 1), 10);
+    };
+    u.onstart = () => setWordIdx(i);
+    u.onerror = () => { if (isPlayingRef.current) stop(); };
+    speechSynthesis.speak(u);
+  }, [words, stop]);
+
+  // Mode 2: Continuous Narration (Natural Flow)
+  const speakContinuous = useCallback((startIndex) => {
+    speechSynthesis.cancel();
+    
+    // Join remaining words from startIndex
+    const remainingText = words.slice(startIndex).join(' ');
+    const u = new SpeechSynthesisUtterance(remainingText);
+    u.rate = speedRef.current;
+    
+    const voice = voicesRef.current.find(v => v.name === selectedVoiceNameRef.current);
+    if (voice) u.voice = voice;
+    u.pitch = 1.05;
+
+    u.onboundary = (event) => {
+      if (event.name === 'word') {
+        const charIdx = event.charIndex;
+        // Find which word this character index corresponds to in the full text
+        const textToSearch = remainingText.slice(0, charIdx + 1).trim();
+        const currentWordIdx = startIndex + (textToSearch ? textToSearch.split(/\s+/).length - 1 : 0);
+        setWordIdx(currentWordIdx);
       }
     };
-    
-    u.onstart = () => setWordIdx(i);
-    u.onerror = () => {
+
+    u.onend = () => {
       if (isPlayingRef.current) stop();
     };
 
+    u.onerror = () => { if (isPlayingRef.current) stop(); };
     speechSynthesis.speak(u);
   }, [words, stop]);
 
@@ -69,8 +122,13 @@ export default function ReadingPage({ addAction }) {
     } else {
       setPlaying(true);
       isPlayingRef.current = true;
-      addAction('readingWords', `Read "${useCustom ? 'Custom' : story.title}"`);
-      speakWord(wordIdx < 0 ? 0 : wordIdx);
+      addAction('readingWords', `Read "${useCustom ? 'Custom' : story.title}" in ${readMode} mode`);
+      const startAt = wordIdx < 0 ? 0 : wordIdx;
+      if (readModeRef.current === 'word') {
+        speakWord(startAt);
+      } else {
+        speakContinuous(startAt);
+      }
     }
   };
 
@@ -114,6 +172,62 @@ export default function ReadingPage({ addAction }) {
             style={{ width: '100%', height: '150px', background: 'var(--btn-bg)', border: '1px solid var(--border-color)', borderRadius: '0.75rem', color: 'var(--text-primary)', padding: '1rem', outline: 'none', fontFamily: 'inherit' }}
           />
         )}
+
+        <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div>
+            <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 800 }}>Reading Style</h4>
+            <div style={{ display: 'flex', background: 'var(--btn-bg)', padding: '4px', borderRadius: '0.75rem', gap: '4px' }}>
+              <button 
+                onClick={() => { setReadMode('word'); stop(); }}
+                style={{
+                  flex: 1, padding: '0.6rem', border: 'none', borderRadius: '0.6rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 800,
+                  background: readMode === 'word' ? 'var(--accent-color)' : 'transparent',
+                  color: readMode === 'word' ? '#0F172A' : 'var(--text-primary)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Focus Mode
+              </button>
+              <button 
+                onClick={() => { setReadMode('continuous'); stop(); }}
+                style={{
+                  flex: 1, padding: '0.6rem', border: 'none', borderRadius: '0.6rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 800,
+                  background: readMode === 'continuous' ? 'var(--accent-color)' : 'transparent',
+                  color: readMode === 'continuous' ? '#0F172A' : 'var(--text-primary)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Flow Mode
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 800 }}>Narration Voice</h4>
+            <select 
+              value={selectedVoiceName}
+              onChange={(e) => setSelectedVoiceName(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                background: 'var(--btn-bg)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                fontSize: '0.9rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {voices.filter(v => v.lang.startsWith('en')).map(v => (
+                <option key={v.name} value={v.name} style={{ background: '#fff', color: '#000' }}>{v.name}</option>
+              ))}
+            </select>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+              Choose a natural-sounding voice for a better experience.
+            </p>
+          </div>
+        </div>
       </aside>
 
       <main className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minHeight: '400px', height: '100%', overflow: 'hidden' }}>
