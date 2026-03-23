@@ -17,8 +17,8 @@ export default function AdultsPage({ sessionData }) {
         <header className="card" style={{ display: 'flex', alignItems: 'center', gap: '2rem', background: 'linear-gradient(135deg, #1E40AF, #0369A1)', color: '#fff' }}>
           <div style={{ fontSize: '3.5rem' }}>👩‍🏫</div>
           <div>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 900 }}>Teacher Dashboard</h2>
-            <p style={{ opacity: 0.8 }}>Real-time session analysis and learner engagement insights.</p>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900 }}>Parental Insights</h2>
+            <p style={{ opacity: 0.8 }}>Real-time session analysis and learner engagement reports.</p>
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 800, opacity: 0.6 }}>ACTIVE SESSION</div>

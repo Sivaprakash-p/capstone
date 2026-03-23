@@ -77,7 +77,7 @@ export default function TrainingPage({ addAction }) {
     <div className="page-container" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
 
       <aside className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: 'fit-content' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Phonetic Lab 🧪</h3>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Phonetics Laboratory 🧪</h3>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Master commonly confused letters with sight and sound.</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -86,8 +86,8 @@ export default function TrainingPage({ addAction }) {
               onClick={() => { setSelectedPair(p); setActiveLetter(p.pair[0]); }}
               className="interactive-btn"
               style={{
-                background: selectedPair.pair.join('-') === p.pair.join('-') ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-                color: selectedPair.pair.join('-') === p.pair.join('-') ? '#0F172A' : '#fff',
+                background: selectedPair.pair.join('-') === p.pair.join('-') ? 'var(--accent-color)' : 'var(--btn-bg)',
+                color: selectedPair.pair.join('-') === p.pair.join('-') ? '#0F172A' : 'var(--text-primary)',
                 justifyContent: 'flex-start'
               }}>
               {p.pair[0]} vs {p.pair[1]}
@@ -109,8 +109,8 @@ export default function TrainingPage({ addAction }) {
               style={{
                 width: '64px', height: '64px', borderRadius: '50%', border: 'none', cursor: 'pointer',
                 fontSize: '1.75rem', fontWeight: 900,
-                background: activeLetter === l ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)',
-                color: activeLetter === l ? '#0F172A' : '#fff',
+                background: activeLetter === l ? 'var(--accent-color)' : 'var(--btn-bg)',
+                color: activeLetter === l ? '#0F172A' : 'var(--text-primary)',
                 transition: 'all 0.2s'
               }}>
               {l}
@@ -144,7 +144,7 @@ export default function TrainingPage({ addAction }) {
             <h4 style={{ fontWeight: 800 }}>Hearing Awareness</h4>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>The sound of <strong>"{activeLetter}"</strong> is played automatically when you finish tracing.</p>
           </div>
-          <button className="interactive-btn" onClick={() => speak(activeLetter)} style={{ background: '#0F172A', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem 2rem' }}>
+          <button className="interactive-btn" onClick={() => speak(activeLetter)} style={{ background: 'var(--panel-bg-solid)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.75rem 2rem' }}>
             🔉 Listen Again
           </button>
         </div>

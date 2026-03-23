@@ -7,6 +7,8 @@ export default function MemoryPage({ addAction }) {
   const [userSequence, setUserSequence] = useState([]);
   const [activeButton, setActiveButton] = useState(null);
   const [score, setScore] = useState(0);
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [lastActionType, setLastActionType] = useState(''); // Correct!, Matched!, etc.
 
   // Match Game State
   const [cards, setCards] = useState([]);
@@ -42,22 +44,29 @@ export default function MemoryPage({ addAction }) {
 
   const handleSequenceInput = (id) => {
     if (gameState !== 'playing' || activeButton !== null) return;
-    const nextUserSeq = [...userSequence, id];
-    setUserSequence(nextUserSeq);
-
+    
+    // Check if correct before update
     if (id !== sequence[userSequence.length]) {
       setGameState('feedback');
       addAction('memoryScore', `Scored ${score} in Sequence Game`);
       return;
     }
 
+    // Success!
+    const nextUserSeq = [...userSequence, id];
+    setUserSequence(nextUserSeq);
+    setScore(s => s + 1);
+
     if (nextUserSeq.length === sequence.length) {
-      const newScore = score + 1;
-      setScore(newScore);
+      // Completed round!
+      setLastActionType('Sequence Complete! 🌟');
+      setShowCongrats(true);
+      setTimeout(() => setShowCongrats(false), 800);
+
       const nextSeq = [...sequence, Math.floor(Math.random() * 4) + 1];
       setSequence(nextSeq);
       setUserSequence([]);
-      setTimeout(() => playSequence(nextSeq), 1000);
+      setTimeout(() => playSequence(nextSeq), 1500); // Increased delay for better focus
     }
   };
 
@@ -84,8 +93,11 @@ export default function MemoryPage({ addAction }) {
       if (cards[first].icon === cards[second].icon) {
         setMatched([...matched, first, second]);
         setFlipped([]);
-        const newScore = score + 1;
-        setScore(newScore);
+        setScore(s => s + 5); // More points for a full match
+        setLastActionType('Pair Matched! 🎈');
+        setShowCongrats(true);
+        setTimeout(() => setShowCongrats(false), 800);
+
         if (matched.length + 2 === cards.length) {
           setGameState('feedback');
           addAction('memoryScore', `Cleared Visual Match!`);
@@ -100,7 +112,7 @@ export default function MemoryPage({ addAction }) {
     <div className="page-container" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
 
       <aside className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: 'fit-content' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Brain Coach 🧠</h3>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Cognitive Training 🧠</h3>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Choose a focus area to sharpen your skills.</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -108,8 +120,8 @@ export default function MemoryPage({ addAction }) {
             onClick={() => { setActiveGame('sequence'); setGameState('menu'); }}
             className="interactive-btn"
             style={{
-              background: activeGame === 'sequence' ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-              color: activeGame === 'sequence' ? '#0F172A' : '#fff',
+              background: activeGame === 'sequence' ? 'var(--accent-color)' : 'var(--btn-bg)',
+              color: activeGame === 'sequence' ? '#0F172A' : 'var(--text-primary)',
               justifyContent: 'flex-start'
             }}>
             🔢 Sequential Memory
@@ -118,8 +130,8 @@ export default function MemoryPage({ addAction }) {
             onClick={() => { setActiveGame('match'); setGameState('menu'); }}
             className="interactive-btn"
             style={{
-              background: activeGame === 'match' ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-              color: activeGame === 'match' ? '#0F172A' : '#fff',
+              background: activeGame === 'match' ? 'var(--accent-color)' : 'var(--btn-bg)',
+              color: activeGame === 'match' ? '#0F172A' : 'var(--text-primary)',
               justifyContent: 'flex-start'
             }}>
             🧩 Visual Matching
@@ -164,7 +176,7 @@ export default function MemoryPage({ addAction }) {
               <button key={col.id} onClick={() => handleSequenceInput(col.id)}
                 style={{
                   width: '140px', height: '140px', borderRadius: '2rem', border: 'none', cursor: 'pointer',
-                  background: activeButton === col.id ? col.c : 'rgba(255,255,255,0.05)',
+                  background: activeButton === col.id ? col.c : 'var(--btn-bg)',
                   boxShadow: activeButton === col.id ? `0 0 40px ${col.c}88` : 'none',
                   transform: activeButton === col.id ? 'scale(1.05)' : 'scale(1)',
                   transition: 'all 0.15s',
@@ -182,7 +194,7 @@ export default function MemoryPage({ addAction }) {
                 style={{
                   width: '90px', height: '90px', borderRadius: '1rem', border: 'none', cursor: 'pointer',
                   fontSize: '2rem', transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  background: matched.includes(i) || flipped.includes(i) ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
+                  background: matched.includes(i) || flipped.includes(i) ? 'var(--accent-color)' : 'var(--btn-bg)',
                   transform: matched.includes(i) || flipped.includes(i) ? 'rotateY(0deg)' : 'rotateY(180deg)',
                   opacity: matched.includes(i) ? 0.5 : 1
                 }}>
@@ -197,9 +209,35 @@ export default function MemoryPage({ addAction }) {
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏆</div>
             <h2 style={{ fontSize: '2rem', fontWeight: 900 }}>Finished!</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>You performed brilliantly. Keep training to be even better!</p>
-            <button className="interactive-btn" onClick={() => setGameState('menu')} style={{ background: 'var(--accent-color)', color: '#0F172A', margin: '0 auto' }}>
+            <button className="interactive-btn" onClick={() => { setGameState('menu'); setScore(0); }} style={{ background: 'var(--accent-color)', color: '#0F172A', margin: '0 auto' }}>
               Back to Menu
             </button>
+          </div>
+        )}
+
+        {/* Global Congrats Popup */}
+        {showCongrats && (
+          <div style={{
+            position: 'absolute', top: '15%', left: '50%', transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 2000, textAlign: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            animation: 'congrats-float 0.8s ease-out forwards'
+          }}>
+            <style>{`
+              @keyframes congrats-float {
+                0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); }
+                20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(-50%, -70%) scale(0.9); }
+              }
+            `}</style>
+            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>⭐</div>
+            <div style={{ 
+              fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-color)', 
+              textShadow: '0 4px 10px rgba(0,0,0,0.5)', letterSpacing: '1px'
+            }}>
+              {lastActionType}
+            </div>
           </div>
         )}
       </section>

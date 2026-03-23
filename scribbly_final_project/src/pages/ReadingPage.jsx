@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 const STORIES = [
   { id: 0, title: 'The Little Seed 🌱', text: 'A tiny seed fell into the soft brown earth. Rain came and the sun shone bright. Slowly a small green shoot pushed up through the soil. Day by day it grew taller and stronger. One morning a beautiful flower opened wide and smiled at the sky.' },
@@ -18,28 +18,59 @@ export default function ReadingPage({ addAction }) {
   const text = useCustom ? customText : (story?.text || '');
   const words = text.trim().split(/\s+/).filter(Boolean);
 
+  const isPlayingRef = useRef(false);
+  const speedRef = useRef(speed);
+
+  // Sync refs with state
+  speedRef.current = speed;
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => speechSynthesis.cancel();
+  }, []);
+
   const stop = useCallback(() => {
     speechSynthesis.cancel();
     setPlaying(false);
+    isPlayingRef.current = false;
     setWordIdx(-1);
   }, []);
 
-  const speakWord = (w, i) => {
+  const speakWord = useCallback((i) => {
+    if (i >= words.length || !isPlayingRef.current) {
+      if (i >= words.length) stop();
+      return;
+    }
+
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(w);
-    u.rate = speed;
+
+    const u = new SpeechSynthesisUtterance(words[i]);
+    u.rate = speedRef.current;
+    
+    // Explicitly handle end to move to next word
+    u.onend = () => {
+      if (isPlayingRef.current) {
+        // Use a small delay to ensure previous utterance is fully cleared
+        setTimeout(() => speakWord(i + 1), 10);
+      }
+    };
+    
     u.onstart = () => setWordIdx(i);
-    u.onend = () => { if (playing) speakWord(words[i + 1], i + 1); };
+    u.onerror = () => {
+      if (isPlayingRef.current) stop();
+    };
+
     speechSynthesis.speak(u);
-  };
+  }, [words, stop]);
 
   const toggleRead = () => {
-    if (playing) {
+    if (isPlayingRef.current) {
       stop();
     } else {
       setPlaying(true);
+      isPlayingRef.current = true;
       addAction('readingWords', `Read "${useCustom ? 'Custom' : story.title}"`);
-      speakWord(words[wordIdx < 0 ? 0 : wordIdx], wordIdx < 0 ? 0 : wordIdx);
+      speakWord(wordIdx < 0 ? 0 : wordIdx);
     }
   };
 
@@ -47,7 +78,7 @@ export default function ReadingPage({ addAction }) {
     <div className="page-container" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
 
       <aside className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: 'fit-content' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Library 📖</h3>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Reading Collection 📖</h3>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Choose a story to practice your reading skills.</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -56,8 +87,8 @@ export default function ReadingPage({ addAction }) {
               onClick={() => { setStoryId(s.id); setUseCustom(false); stop(); }}
               className="interactive-btn"
               style={{
-                background: !useCustom && storyId === s.id ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-                color: !useCustom && storyId === s.id ? '#0F172A' : '#fff',
+                background: !useCustom && storyId === s.id ? 'var(--accent-color)' : 'var(--btn-bg)',
+                color: !useCustom && storyId === s.id ? '#0F172A' : 'var(--text-primary)',
                 justifyContent: 'flex-start'
               }}>
               {s.title}
@@ -67,8 +98,8 @@ export default function ReadingPage({ addAction }) {
             onClick={() => { setUseCustom(true); stop(); }}
             className="interactive-btn"
             style={{
-              background: useCustom ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-              color: useCustom ? '#0F172A' : '#fff',
+              background: useCustom ? 'var(--accent-color)' : 'var(--btn-bg)',
+              color: useCustom ? '#0F172A' : 'var(--text-primary)',
               justifyContent: 'flex-start'
             }}>
             ✏️ My Own Text
@@ -80,13 +111,13 @@ export default function ReadingPage({ addAction }) {
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
             placeholder="Paste your text here..."
-            style={{ width: '100%', height: '150px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '0.75rem', color: '#fff', padding: '1rem', outline: 'none', fontFamily: 'inherit' }}
+            style={{ width: '100%', height: '150px', background: 'var(--btn-bg)', border: '1px solid var(--border-color)', borderRadius: '0.75rem', color: 'var(--text-primary)', padding: '1rem', outline: 'none', fontFamily: 'inherit' }}
           />
         )}
       </aside>
 
       <main className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minHeight: '400px', height: '100%', overflow: 'hidden' }}>
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', borderRadius: '1rem', padding: '1.5rem', lineHeight: '2.2', fontSize: '1.35rem', overflowY: 'auto', textAlign: 'justify', hyphens: 'auto' }}>
+        <div style={{ flex: 1, background: 'var(--panel-bg-solid)', borderRadius: '1rem', padding: '1.5rem', lineHeight: '2.2', fontSize: '1.35rem', overflowY: 'auto', textAlign: 'justify', hyphens: 'auto', color: 'var(--text-primary)' }}>
           {words.map((w, i) => (
             <span key={i}
               onClick={() => speakWord(w, i)}
@@ -118,8 +149,8 @@ export default function ReadingPage({ addAction }) {
                 onClick={() => setSpeed(s)}
                 style={{
                   width: '40px', height: '40px', borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  background: speed === s ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)',
-                  color: speed === s ? '#0F172A' : '#fff', fontWeight: 700
+                  background: speed === s ? 'var(--accent-color)' : 'var(--btn-bg)',
+                  color: speed === s ? '#0F172A' : 'var(--text-primary)', fontWeight: 700
                 }}>
                 {s}x
               </button>

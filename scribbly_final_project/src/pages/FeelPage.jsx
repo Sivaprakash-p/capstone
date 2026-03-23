@@ -73,7 +73,7 @@ export default function FeelPage({ addAction }) {
     <div className="page-container" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
 
       <aside className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: 'fit-content' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Emotion Hub 💚</h3>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Wellness Center 💚</h3>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Check in with yourself and find your center.</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -82,8 +82,8 @@ export default function FeelPage({ addAction }) {
               onClick={() => selectMood(m)}
               className="interactive-btn"
               style={{
-                background: selectedMood?.l === m.l ? m.c : 'rgba(255,255,255,0.05)',
-                color: selectedMood?.l === m.l ? '#fff' : '#fff',
+                background: selectedMood?.l === m.l ? m.c : 'var(--btn-bg)',
+                color: selectedMood?.l === m.l ? '#fff' : 'var(--text-primary)',
                 border: `2px solid ${selectedMood?.l === m.l ? m.b : 'transparent'}`,
                 justifyContent: 'flex-start',
                 padding: '0.75rem 1rem'
@@ -119,14 +119,14 @@ export default function FeelPage({ addAction }) {
               Begin 4-4-4 Breathing
             </button>
           ) : (
-            <button className="interactive-btn" onClick={() => { setBreathing(false); setBreathText('Relaxed'); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>
+            <button className="interactive-btn" onClick={() => { setBreathing(false); setBreathText('Relaxed'); }} style={{ background: 'var(--btn-bg)', color: 'var(--text-primary)' }}>
               Finish
             </button>
           )}
         </div>
 
         {selectedMood && (
-          <div className="fade-up" style={{ width: '100%', marginTop: '1rem', padding: '1.5rem', borderRadius: '1rem', background: 'rgba(255,255,255,0.05)', border: `1px dashed ${selectedMood.c}` }}>
+          <div className="fade-up" style={{ width: '100%', marginTop: '1rem', padding: '1.5rem', borderRadius: '1rem', background: 'var(--btn-bg)', border: `1px dashed ${selectedMood.c}` }}>
             <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Draw or scribble how {selectedMood.l} feels:</h3>
             <canvas
               ref={canvasRef}

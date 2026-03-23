@@ -6,17 +6,16 @@ import MemoryPage from './pages/MemoryPage';
 import FeelPage from './pages/FeelPage';
 import AdultsPage from './pages/AdultsPage';
 import TrainingPage from './pages/TrainingPage';
-import AboutPage from './pages/SettingsPage';
+import AccountPage from './pages/AccountPage';
 import AuthPage from './pages/AuthPage';
 
 const TABS = [
-  { id: 'write', icon: '✏️', label: 'Write' },
-  { id: 'read', icon: '📖', label: 'Read' },
-  { id: 'memory', icon: '🧠', label: 'Brain' },
-  { id: 'feel', icon: '💚', label: 'Feel' },
-  { id: 'adults', icon: '👩‍🏫', label: 'Adults' },
-  { id: 'training', icon: '🧪', label: 'Lab' },
-  { id: 'about', icon: 'ℹ️', label: 'About' },
+  { id: 'write', icon: '✏️', label: 'Writing Center' },
+  { id: 'read', icon: '📖', label: 'Reading Library' },
+  { id: 'memory', icon: '🧠', label: 'Memory Training' },
+  { id: 'feel', icon: '💚', label: 'Emotional Wellness' },
+  { id: 'adults', icon: '👩‍🏫', label: 'Parent Resources' },
+  { id: 'training', icon: '🧪', label: 'Phonetic Lab' },
 ];
 
 export default function App() {
@@ -79,6 +78,12 @@ export default function App() {
 
   const renderPage = () => {
     const commonProps = { addAction, sessionData };
+    const accountProps = { 
+      ...commonProps, 
+      theme, setTheme, 
+      dyslexicFont, setDyslexicFont, 
+      rulerActive, setRulerActive 
+    };
     switch (tab) {
       case 'write': return <WritingPage {...commonProps} />;
       case 'read': return <ReadingPage {...commonProps} />;
@@ -86,13 +91,13 @@ export default function App() {
       case 'feel': return <FeelPage {...commonProps} />;
       case 'adults': return <AdultsPage {...commonProps} />;
       case 'training': return <TrainingPage {...commonProps} />;
-      case 'about': return <AboutPage {...commonProps} />;
+      case 'account': return <AccountPage {...accountProps} />;
       default: return <WritingPage {...commonProps} />;
     }
   };
 
   if (isAuthLoading) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A1A3A', color: '#38BDF8', fontSize: '24px', fontWeight: 'bold' }}>Loading Scribbly...</div>;
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-color)', color: 'var(--accent-color)', fontSize: '24px', fontWeight: 'bold' }}>Loading Scribbly...</div>;
   }
 
   if (!isAuthenticated) {
@@ -121,10 +126,11 @@ export default function App() {
           <button key={t.id} onClick={() => setTab(t.id)}
             style={{
               padding: '0 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-              background: tab === t.id ? 'rgba(255,255,255,0.15)' : 'transparent',
+              background: tab === t.id ? 'rgba(255,255,255,0.2)' : 'transparent',
               display: 'flex', alignItems: 'center', gap: 8,
-              color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.6)',
+              color: '#fff',
               fontSize: 14, fontWeight: tab === t.id ? 700 : 500,
+              opacity: tab === t.id ? 1 : 0.7,
               transition: 'all 0.2s', height: 42,
             }}>
             <span style={{ fontSize: 18 }}>{t.icon}</span>
@@ -133,17 +139,20 @@ export default function App() {
         ))}
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => supabase.auth.signOut()} style={{ padding: '8px 16px', background: 'rgba(239, 68, 68, 0.2)', color: '#FCA5A5', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>Log Out</button>
-
-          {/* Accessibility Controls */}
-          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: 4, borderRadius: 10, gap: 4 }}>
-            <button title="Contrast Theme" onClick={() => setTheme(p => p === 'cream' ? 'dark' : 'cream')}
-              style={{ width: 32, height: 32, borderRadius: 6, border: 'none', background: theme === 'cream' ? '#fff' : 'transparent', cursor: 'pointer', fontSize: 16 }}>🍦</button>
-            <button title="Dyslexic Font" onClick={() => setDyslexicFont(!dyslexicFont)}
-              style={{ width: 32, height: 32, borderRadius: 6, border: 'none', background: dyslexicFont ? '#fff' : 'transparent', cursor: 'pointer', fontSize: 16, fontWeight: 900 }}>Aa</button>
-            <button title="Reading Ruler" onClick={() => setRulerActive(!rulerActive)}
-              style={{ width: 32, height: 32, borderRadius: 6, border: 'none', background: rulerActive ? '#fff' : 'transparent', cursor: 'pointer', fontSize: 16 }}>📏</button>
-          </div>
+          <button 
+            title="Account"
+            onClick={() => setTab('account')}
+            style={{
+              width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
+              background: tab === 'account' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+              color: '#fff',
+              fontSize: 18, transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: tab === 'account' ? '0 0 0 2px var(--accent-color)' : 'none'
+            }}
+          >
+            👤
+          </button>
         </div>
       </nav>
 
